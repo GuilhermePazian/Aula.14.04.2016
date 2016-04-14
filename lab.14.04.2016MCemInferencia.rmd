@@ -1,0 +1,69 @@
+---
+title: "MC em inferência"
+author: "Guilherme Pazian"
+date: "14 de abril de 2016"
+output: html_document
+---
+
+##MSE Média Aparada
+
+Criar uma função para calcular a média aprada:
+```{r cria_media_aparada}
+media_aparada = function(dados, nivel){
+  ord = sort(dados)
+  n = length(ord)
+  remover = c(1:nivel, (n-nivel+1):n)
+  mean(ord[-remover])
+}
+
+```
+
+Para Calscular o MSE da média aparada, precisamos definir o número de replicatas de Monte Carlo, o tamanho da amostra a ser tomada e sua distribuição.
+```{r mse_media_aparada, cache=TRUE}
+#cache guarda os resultados deste Chunk para proximas simulações
+m = 1e5
+n = 50
+resp = replicate(m,{
+  x = rexp(n,10)
+  return(ma = media_aparada(x,3))
+})
+```
+
+Visalizando resultados iniciais:
+```{r vis_resp}
+head(resp)
+```
+
+Para calcular o erro quadrado médio $E(\hat{\theta}-\theta)^2$.
+
+```{r mse_media_aparada_exponencial}
+(EQM1 = mean((resp-1/10)^2))
+(v = (n-1)/n*var(resp)/sqrt(n))
+(vicio = mean(resp))
+(EQM2 = v+vicio^2)
+(dif = EQM1 - EQM2)
+```
+
+```{r histograma}
+hist(resp,main="Histograma",xlab="Prop",ylab="Frequencia")
+```
+
+
+## Avaliar Poder do Teste de Hipóteses
+
+```{r teste_t1}
+
+## H0: mu_x = mu_y
+
+## def. replicacoes
+m = 1e3
+n = 10
+alfa = 0.05
+pvals = replicate(m,{
+x = rexp(n,rate =  1)
+y = rexp(n,rate = .05)
+t.test(x,y,var.equal=FALSE)$p.value
+})
+mean(pvals < alfa)
+```
+
